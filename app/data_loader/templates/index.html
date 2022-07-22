@@ -1,0 +1,45 @@
+{% include "includes/header.html" %}
+<header>
+  <div class="page-header min-vh-75 relative">
+    <span class="mask bg-gradient-primary opacity-4"></span>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-7 text-center mx-auto">
+          <h1 class="header-text">Data loader</h1>
+          <p class="header-text">App for loading data from files to database.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="container marketing products">
+
+  <hr class="featurette-divider">
+  <div class="container">
+    <form action="{% url 'data_loader:upload' %}" enctype="multipart/form-data" method="post">
+      {% csrf_token %}
+      <label for="">Upload a file</label>
+      {{ upload_form }}
+      <input type="submit" value="Upload">
+    </form>
+  </div>
+
+  <hr class="featurette-divider">
+
+  <div class="container">
+    <form action="{% url 'data_loader:process' %}" enctype="multipart/form-data" method="post">
+      {% csrf_token %}
+      <label for="">Process a file</label>
+      {{ process_form }}
+      <input type="submit" value="Process">
+    </form>
+  </div>
+
+  <hr class="featurette-divider">
+
+
+  <!-- /END THE FEATURETTES -->
+
+</div>
+
+{% include "includes/footer.html" %}
