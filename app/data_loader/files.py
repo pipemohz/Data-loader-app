@@ -11,9 +11,9 @@ def is_valid_filter(filename: str, tablename: str):
     file = File.objects.filter(name=filename).first()
     table = Table.objects.filter(name=tablename).first()
 
-    sustitution = Sustitution.objects.filter(file=file, table=table)
+    insertions = Insertion.objects.filter(file=file, table=table)
 
-    if sustitution:
+    if insertions:
         return True
     else:
         return False
@@ -23,14 +23,40 @@ def build_dataframe(path: str, columns: list) -> pd.DataFrame:
 
     filename = os.path.basename(path)
 
-    if "csv" in filename or "txt" in filename:
+    if "reporte TFA" in filename:
+        columns.append("HABILITADO")
+        df = pd.read_csv(path, sep='\t', usecols=columns, encoding='latin1')
+        df.dropna(axis='index', inplace=True)
+        df.reset_index(drop=True, inplace=True)
+        df.columns = df.columns.str.strip()
+
+        df = df.reindex(columns, axis="columns")
+
+        df = df[df['HABILITADO'] == "SI"]
+        df = df.drop(columns=['HABILITADO'])
+
+        print(df.head())
+
+    elif "SINCO" in filename and filename.endswith(".csv"):
+        df = pd.read_csv(path, sep=',', usecols=columns)
+        df.dropna(axis='index', inplace=True)
+        df.reset_index(drop=True, inplace=True)
+        df.columns = df.columns.str.strip()
+
+        df = df.reindex(columns, axis="columns")
+
+        print(df.head())
+
+    elif "csv" in filename or "txt" in filename:
         df = pd.read_csv(path,
                          skiprows=3, sep=';', usecols=columns)
         df.dropna(axis='index', inplace=True)
         df.reset_index(drop=True, inplace=True)
-        df.columns = df.columns.str.replace(' ', '')
+        df.columns = df.columns.str.strip()
 
-        # print(df.tail())
+        df = df.reindex(columns, axis="columns")
+
+        print(df.head())
 
     return df
 
@@ -43,16 +69,16 @@ def process_file(filename: str, tablename: str):
     filename = file.filename
     system = file.system.name
 
-    sustitutions = Sustitution.objects.filter(file=file, table=table)
+    insertions = Insertion.objects.filter(file=file, table=table)
 
     path_to_file = os.path.join(BASE_DIR, "files", system, filename)
 
-    columns_from = [s.column_from for s in sustitutions]
-    columns_to = [s.column_to for s in sustitutions]
+    columns_from = [i.column_from for i in insertions]
+    columns_to = [i.column_to for i in insertions]
 
     df = build_dataframe(path=path_to_file, columns=columns_from)
-    query_database(df=df, table=table.name,
-                   columns_to=columns_to, system_id=file.system.id)
+    # query_database(df=df, table=table.name,
+    #                columns_to=columns_to, system_id=file.system.id)
 
 
 def is_valid_file(filename: str) -> bool:

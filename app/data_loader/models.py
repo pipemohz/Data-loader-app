@@ -27,8 +27,15 @@ class File(models.Model):
         return self.name
 
 
-class Sustitution(models.Model):
+class Insertion(models.Model):
     table = models.ForeignKey(Table, on_delete=models.CASCADE)
     file = models.ForeignKey(File, on_delete=models.CASCADE)
     column_from = models.CharField(max_length=255)
     column_to = models.CharField(max_length=255)
+
+
+class SpecialInsertion(models.Model):
+    table = models.ForeignKey(Table, on_delete=models.CASCADE)
+    file = models.ForeignKey(File, on_delete=models.CASCADE)
+    column_to = models.CharField(max_length=255)
+    value = models.CharField(max_length=255)
