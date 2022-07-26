@@ -1,10 +1,9 @@
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
-from django.template import loader
+# from django.template import loader
 from django.urls import reverse
 from .forms import UploadFileForm, ProcessFileForm
-from .files import save_file, is_valid_file, process_file, is_valid_filter
-from data_loader.dao import query_database
+from .files import save_file, is_valid_file, process_file, is_valid_filter, file_exists
 
 # Create your views here.
 
@@ -36,7 +35,10 @@ def process(request):
             filename = form.cleaned_data.get('file')
             tablename = form.cleaned_data.get('table')
             if is_valid_filter(filename=filename, tablename=tablename):
-                process_file(filename, tablename)
+                if file_exists(filename=filename):
+                    process_file(filename, tablename)
+                else:
+                    return HttpResponse("The file specified does not exist.")
             else:
                 return HttpResponse("Invalid table selected.")
         else:
