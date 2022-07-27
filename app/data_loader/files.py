@@ -113,12 +113,10 @@ def process_single_file(filename: str, tablename: str):
     file = File.objects.filter(name=filename).first()
     table = Table.objects.filter(name=tablename).first()
 
-    filename = file.filename
-    system = file.system.name
-
     insertions = Insertion.objects.filter(file=file, table=table)
 
-    path_to_file = os.path.join(BASE_DIR, "files", system, filename)
+    path_to_file = os.path.join(
+        BASE_DIR, "files", file.system.name, file.filename)
 
     columns_from = [i.column_from for i in insertions]
     columns_to = [i.column_to for i in insertions]
