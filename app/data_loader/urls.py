@@ -7,5 +7,6 @@ urlpatterns = [
     path('', views.index),
     path("index/", views.index, name="index"),
     path("upload/", views.upload, name="upload"),
-    path("process/", views.process, name="process")
+    path("process_file/", views.process_file, name="process_file"),
+    path("process_group/", views.process_group, name="process_group")
 ]

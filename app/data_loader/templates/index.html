@@ -27,10 +27,21 @@
   <hr class="featurette-divider">
 
   <div class="container">
-    <form action="{% url 'data_loader:process' %}" enctype="multipart/form-data" method="post">
+    <form action="{% url 'data_loader:process_file' %}" enctype="multipart/form-data" method="post">
       {% csrf_token %}
       <label for="">Process a file</label>
-      {{ process_form }}
+      {{ process_file_form }}
+      <input type="submit" value="Process">
+    </form>
+  </div>
+
+  <hr class="featurette-divider">
+
+  <div class="container">
+    <form action="{% url 'data_loader:process_group' %}" enctype="multipart/form-data" method="post">
+      {% csrf_token %}
+      <label for="">Process a file</label>
+      {{ process_group_form }}
       <input type="submit" value="Process">
     </form>
   </div>

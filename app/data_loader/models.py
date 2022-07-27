@@ -15,10 +15,19 @@ class Table(models.Model):
         return self.name
 
 
+class FileGroup(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self) -> str:
+        return self.name
+
+
 class File(models.Model):
     name = models.CharField(max_length=255)
     filename = models.CharField(max_length=255)
     system = models.ForeignKey(ExternSystem, on_delete=models.CASCADE)
+    group = models.ForeignKey(
+        FileGroup, on_delete=models.SET_NULL, blank=True, null=True, default=None)
 
     class Meta:
         ordering = ['name']
