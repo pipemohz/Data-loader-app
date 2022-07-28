@@ -12,12 +12,11 @@ def is_valid_filter(tablename: str,  name: str, _type="file"):
 
     table = Table.objects.filter(name=tablename).first()
 
-    match _type:
-        case "file":
-            file = File.objects.filter(name=name).first()
-        case "group":
-            group = FileGroup.objects.filter(name=name).first()
-            file = File.objects.filter(group=group).first()
+    if _type == "file":
+        file = File.objects.filter(name=name).first()
+    elif _type == "group":
+        group = FileGroup.objects.filter(name=name).first()
+        file = File.objects.filter(group=group).first()
 
     insertions = Insertion.objects.filter(file=file, table=table)
 
