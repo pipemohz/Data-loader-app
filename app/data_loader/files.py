@@ -45,8 +45,6 @@ def build_dataframe(path: str, columns: list) -> pd.DataFrame:
         df = pd.read_excel(path, engine='openpyxl', usecols=columns)
         df.dropna(axis="index", inplace=True)
         df.reset_index(drop=True, inplace=True)
-        if "Roles" in columns:
-            df["Roles"] = df["Roles"].str.split(':', expand=True)[1]
         df = df.reindex(columns, axis="columns")
 
     elif "META4" in filename:
@@ -136,7 +134,7 @@ def process_file_group(groupname: str, tablename: str):
 
     files = File.objects.filter(group=group)
 
-    dfs = []
+    dfs = {}
 
     for file in files:
 
@@ -148,7 +146,10 @@ def process_file_group(groupname: str, tablename: str):
         columns_from = [i.column_from for i in insertions]
 
         df = build_dataframe(path=path_to_file, columns=columns_from)
-        dfs.append({file.name: df})
+        dfs[file.name] = df
+        # dfs.append({file.name: df})
+
+    # for name, df in dfs.items():
 
     # columns_to = [i.column_to for i in insertions]
 
