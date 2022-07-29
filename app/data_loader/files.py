@@ -45,6 +45,11 @@ def build_dataframe(path: str, columns: list) -> pd.DataFrame:
         df = pd.read_excel(path, engine='openpyxl', usecols=columns)
         df.dropna(axis="index", inplace=True)
         df.reset_index(drop=True, inplace=True)
+        df.replace(
+            to_replace=r'("id":)\w+[0-9,]|name:|[{}\[\]"]', value='', regex=True, inplace=True)
+        if 'Roles' in columns:
+            df = df.assign(Roles=df.Roles.str.split(',')).explode(
+                'Roles', ignore_index=True)
         df = df.reindex(columns, axis="columns")
 
     elif "META4" in filename:
@@ -99,7 +104,7 @@ def build_dataframe(path: str, columns: list) -> pd.DataFrame:
         # df.columns = df.columns.str.strip()
         df = df.reindex(columns, axis="columns")
 
-    df = df.head(5)
+    df = df.head()
     print(df)
 
     return df
@@ -134,7 +139,7 @@ def process_file_group(groupname: str, tablename: str):
 
     files = File.objects.filter(group=group)
 
-    dfs = {}
+    dfs = []
 
     for file in files:
 
@@ -146,19 +151,21 @@ def process_file_group(groupname: str, tablename: str):
         columns_from = [i.column_from for i in insertions]
 
         df = build_dataframe(path=path_to_file, columns=columns_from)
-        dfs[file.name] = df
-        # dfs.append({file.name: df})
+        dfs.append(df)
 
-    # for name, df in dfs.items():
+    df = pd.concat(dfs, ignore_index=True)
+    df.drop_duplicates(inplace=True)
 
-    # columns_to = [i.column_to for i in insertions]
+    columns_to = [i.column_to for i in insertions]
 
-    # # Check if there are special insertions for table.
-    # special_insertions = SpecialInsertion.objects.filter(
-    #     file=file, table=table)
+    # Check if there are special insertions for table.
+    special_insertions = SpecialInsertion.objects.filter(
+        file=file, table=table)
 
-    # query_database(df=df, table=table.name,
-    #             columns_to=columns_to, system_id=file.system.id, special_insertions=special_insertions)
+    df = df.head()
+
+    query_database(df=df, table=table.name,
+                   columns_to=columns_to, system_id=file.system.id, special_insertions=special_insertions)
 
 
 def is_valid_file(filename: str) -> bool:
