@@ -1,10 +1,7 @@
-from tokenize import group
-from django.core.files.uploadedfile import UploadedFile
 from .models import *
 import pandas as pd
 import numpy as np
 import os
-from app.settings import BASE_DIR
 from data_loader.dao import query_database
 
 
@@ -14,11 +11,10 @@ def is_valid_filter(tablename: str,  name: str, _type="file"):
 
     if _type == "file":
         file = File.objects.filter(name=name).first()
+        insertions = Insertion.objects.filter(file=file, table=table)
     elif _type == "group":
         group = FileGroup.objects.filter(name=name).first()
-        file = File.objects.filter(group=group).first()
-
-    insertions = Insertion.objects.filter(file=file, table=table)
+        insertions = GroupInsertion.objects.filter(group=group, table=table)
 
     if insertions:
         return True
@@ -29,9 +25,7 @@ def is_valid_filter(tablename: str,  name: str, _type="file"):
 def file_exists(filename: str):
     file = File.objects.filter(name=filename).first()
 
-    system = file.system.name
-
-    if os.path.exists(os.path.join(BASE_DIR, "files", system, file.filename)):
+    if os.path.exists(file.filename.path):
         return True
     else:
         return False
@@ -41,7 +35,37 @@ def build_dataframe(path: str, columns: list) -> pd.DataFrame:
 
     filename = os.path.basename(path)
 
-    if "carulla" in filename or "exitocol" in filename:
+    if (filename.startswith("2") or filename.startswith("8")) and filename.endswith(".txt"):
+
+        if '1-2' in columns:
+            columns += columns[columns.index('1-2')].split('-')
+            columns.remove('1-2')
+
+        columns = [int(column)-1 for column in columns]
+
+        header = (range(6))
+        df = pd.read_csv(path, sep=';', header=0,
+                         names=header, usecols=columns)
+        df.dropna(axis='index', inplace=True)
+        df.reset_index(drop=True, inplace=True)
+
+        if 0 in columns and 1 in columns:
+            df["name"] = df[0] + " " + df[1]
+            df = df.drop(columns=[0, 1])
+            columns.append("name")
+            columns.remove(0)
+            columns.remove(1)
+
+        df = df.reindex(columns, axis="columns")
+
+    elif "viabogo" in filename or "viacidis" in filename or "viaenv" in filename or "viafunza" in filename or "viayumbo" in filename or "viavegas" in filename:
+        df = pd.read_excel(path, engine='openpyxl',
+                           usecols=columns, dtype='str')
+        df.dropna(axis="index", inplace=True)
+        df.reset_index(drop=True, inplace=True)
+        df = df.reindex(columns, axis="columns")
+
+    elif "carulla" in filename or "exitocol" in filename:
         df = pd.read_excel(path, engine='openpyxl', usecols=columns)
         df.dropna(axis="index", inplace=True)
         df.reset_index(drop=True, inplace=True)
@@ -50,6 +74,83 @@ def build_dataframe(path: str, columns: list) -> pd.DataFrame:
         if 'Roles' in columns:
             df = df.assign(Roles=df.Roles.str.split(',')).explode(
                 'Roles', ignore_index=True)
+        df = df.reindex(columns, axis="columns")
+
+    elif "SSFF" in filename:
+        if "Primer nombre-Segundo nombre-Primer apellido" in columns:
+            columns.insert(columns.index(
+                "Primer nombre-Segundo nombre-Primer apellido"), "Primer nombre")
+            columns.insert(columns.index(
+                "Primer nombre-Segundo nombre-Primer apellido"), "Segundo nombre")
+            columns.insert(columns.index(
+                "Primer nombre-Segundo nombre-Primer apellido"), "Primer apellido")
+            columns.remove("Primer nombre-Segundo nombre-Primer apellido")
+
+        df = pd.read_excel(path, engine='openpyxl',
+                           usecols=columns, dtype='str')
+        # df.dropna(axis='index', inplace=True)
+        # df.reset_index(drop=True, inplace=True)
+
+        if "Primer nombre" in columns and "Segundo nombre" in columns and "Primer apellido" in columns:
+            df["name"] = df["Primer nombre"] + " " + df["Primer apellido"]
+            df = df.drop(columns=["Primer nombre",
+                         "Segundo nombre", "Primer apellido"])
+            columns.insert(columns.index("Primer nombre"), "name")
+            columns.remove("Primer nombre")
+            columns.remove("Segundo nombre")
+            columns.remove("Primer apellido")
+
+        df = df.reindex(columns, axis="columns")
+
+    elif "interactiva" in filename:
+
+        columns = [int(column)-1 for column in columns]
+
+        header = (range(9))
+        df = pd.read_excel(path, engine='openpyxl', header=0,
+                           names=header, usecols=columns, dtype='str')
+        df.dropna(axis='index', inplace=True)
+        df.reset_index(drop=True, inplace=True)
+        df = df.reindex(columns, axis="columns")
+
+    elif "POS" in filename:
+        df = pd.read_excel(path, engine='xlrd', usecols=columns, dtype='str')
+        df.dropna(axis="index", inplace=True)
+        df.reset_index(drop=True, inplace=True)
+        df = df.reindex(columns, axis="columns")
+
+    elif "WMS_SCE" in filename:
+        df = pd.read_excel(path, engine='openpyxl',
+                           usecols=columns, dtype='str')
+        df.dropna(axis="index", inplace=True)
+        df.reset_index(drop=True, inplace=True)
+
+    elif "Teradata" in filename:
+        df = pd.read_excel(path, engine='openpyxl',
+                           usecols=columns, dtype='str')
+        df.dropna(axis="index", inplace=True)
+        df.reset_index(drop=True, inplace=True)
+        df = df.reindex(columns, axis="columns")
+
+    elif "MicroStrategy" in filename:
+        df = pd.read_excel(path, engine='openpyxl',
+                           usecols=columns, dtype='str')
+        df.dropna(axis="index", inplace=True)
+        df.reset_index(drop=True, inplace=True)
+        df = df.reindex(columns, axis="columns")
+
+    elif "ARIBA" in filename:
+        df = pd.read_excel(path, engine='openpyxl',
+                           usecols=columns, dtype='str')
+        df.dropna(axis="index", inplace=True)
+        df.reset_index(drop=True, inplace=True)
+        df = df.reindex(columns, axis="columns")
+
+    elif "Nplus" in filename:
+        df = pd.read_excel(path, engine='openpyxl',
+                           usecols=columns, dtype='str')
+        df.dropna(axis="index", inplace=True)
+        df.reset_index(drop=True, inplace=True)
         df = df.reindex(columns, axis="columns")
 
     elif "META4" in filename:
@@ -104,7 +205,7 @@ def build_dataframe(path: str, columns: list) -> pd.DataFrame:
         # df.columns = df.columns.str.strip()
         df = df.reindex(columns, axis="columns")
 
-    df = df.head()
+    df = df.head(10)
     print(df)
 
     return df
@@ -117,9 +218,6 @@ def process_single_file(filename: str, tablename: str):
 
     insertions = Insertion.objects.filter(file=file, table=table)
 
-    path_to_file = os.path.join(
-        BASE_DIR, "files", file.system.name, file.filename)
-
     columns_from = [i.column_from for i in insertions]
     columns_to = [i.column_to for i in insertions]
 
@@ -127,7 +225,7 @@ def process_single_file(filename: str, tablename: str):
     special_insertions = SpecialInsertion.objects.filter(
         file=file, table=table)
 
-    df = build_dataframe(path=path_to_file, columns=columns_from)
+    df = build_dataframe(path=file.filename.path, columns=columns_from)
     query_database(df=df, table=table.name,
                    columns_to=columns_to, system_id=file.system.id, special_insertions=special_insertions)
 
@@ -138,66 +236,20 @@ def process_file_group(groupname: str, tablename: str):
     table = Table.objects.filter(name=tablename).first()
 
     files = File.objects.filter(group=group)
+    files[0].system.id
 
-    dfs = []
+    insertions = GroupInsertion.objects.filter(group=group, table=table)
+    columns_from = [i.column_from for i in insertions]
 
-    for file in files:
-
-        insertions = Insertion.objects.filter(file=file, table=table)
-
-        path_to_file = os.path.join(
-            BASE_DIR, "files", file.system.name, file.filename)
-
-        columns_from = [i.column_from for i in insertions]
-
-        df = build_dataframe(path=path_to_file, columns=columns_from)
-        dfs.append(df)
+    dfs = [build_dataframe(path=file.filename.path,
+                           columns=columns_from) for file in files]
 
     df = pd.concat(dfs, ignore_index=True)
     df.drop_duplicates(inplace=True)
 
     columns_to = [i.column_to for i in insertions]
 
-    # Check if there are special insertions for table.
-    special_insertions = SpecialInsertion.objects.filter(
-        file=file, table=table)
-
     df = df.head()
 
     query_database(df=df, table=table.name,
-                   columns_to=columns_to, system_id=file.system.id, special_insertions=special_insertions)
-
-
-def is_valid_file(filename: str) -> bool:
-    files = File.objects.all()
-
-    valid_file = any(file.filename == filename for file in files)
-
-    if valid_file:
-        return True
-    else:
-        return False
-
-
-def save_file(file_object: UploadedFile):
-
-    file = File.objects.filter(filename=file_object.name).first()
-
-    # Set path to save file.
-    path = os.path.join(BASE_DIR, "files")
-    # Create "files" directory if not exist
-    create_directory(path)
-    # Set path of system to save file
-    path = os.path.join(path, file.system.name)
-    # Create system directory if not exist
-    create_directory(path)
-
-    with open(os.path.join(path, file_object.name), mode="wb+") as destination:
-        for chunk in file_object.chunks():
-            destination.write(chunk)
-
-
-def create_directory(path: str):
-
-    if not os.path.exists(path):
-        os.mkdir(path)
+                   columns_to=columns_to, system_id=files[0].system.id)

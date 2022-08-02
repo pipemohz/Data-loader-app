@@ -55,4 +55,4 @@ def query_database(df: DataFrame, table: str, columns_to: list, system_id: int, 
     cursor.close()
     conn.close()
 
-    print("Execution finished.")
+    # print("Execution finished.")
