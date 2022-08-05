@@ -1,4 +1,4 @@
-# Countries data app
+# Data loader app
 
 App for loading data into postgresql database tables following specific data processing rules. It is a Django-based web application which uses pandas to read data file formats output from extern systems and psycopg2 as adapter to make inserts into database.
 
