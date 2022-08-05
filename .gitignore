@@ -250,6 +250,9 @@ files.json
 # Files folder
 files
 
+# dao copy
+dao copy.py
+
 # Pyre type checker
 
 # pytype static type analyzer
