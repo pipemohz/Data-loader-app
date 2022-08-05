@@ -1,6 +1,5 @@
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse
 from django.shortcuts import render, redirect
-from django.urls import reverse
 from .forms import ProcessFileForm, ProcessGroupFileForm
 from .files import process_file_group, process_single_file, is_valid_filter, file_exists
 from django.contrib import messages
